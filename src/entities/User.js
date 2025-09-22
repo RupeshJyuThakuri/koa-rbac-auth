@@ -2,12 +2,12 @@ import { EntitySchema } from "typeorm";
 
 export const User = new EntitySchema({
   name: "User",
-  tableName: "user",
+  tableName: "users",
   columns: {
     id: {
       type: "uuid",
       primary: true,
-      generated: "uuid", // UUID PK
+      generated: "uuid",
     },
     name: {
       type: "varchar",
@@ -25,6 +25,11 @@ export const User = new EntitySchema({
       type: "many-to-one",
       target: "Role",
       joinColumn: { name: "roleId" },
+    },
+    profile: {
+      type: "one-to-one",
+      target: "Profile",
+      inverseSide: "user",
     },
   },
 });

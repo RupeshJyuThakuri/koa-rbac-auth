@@ -1,6 +1,7 @@
 import Router from "@koa/router";
 import { AppDataSource } from "../config/data-source.js";
 import { User } from "../entities/User.js";
+import { Profile } from "../entities/Profile.js";
 import { authMiddleware } from "../middlewares/auth.js";
 import { requireRole } from "../middlewares/role.js";
 
@@ -11,7 +12,7 @@ const router = new Router({ prefix: "/users" });
 router.get("/", authMiddleware, requireRole("Admin"), async (ctx) => {
   const userRepo = AppDataSource.getRepository(User);
   const users = await userRepo.find({ relations: ["role"] }); // include role info
-
+  
   // Remove passwords before sending
   const safeUsers = users.map((u) => ({
     id: u.id,
@@ -19,7 +20,7 @@ router.get("/", authMiddleware, requireRole("Admin"), async (ctx) => {
     email: u.email,
     role: u.role.name,
   }));
-
+  
   ctx.body = safeUsers;
 });
 
@@ -27,12 +28,15 @@ router.get("/", authMiddleware, requireRole("Admin"), async (ctx) => {
 
 router.get("/profile", authMiddleware, async (ctx) => {
   const userRepo = AppDataSource.getRepository(User);
+  const profileRepo = AppDataSource.getRepository(Profile);
 
   // ctx.state.user was set in authMiddleware after verifying JWT
   const user = await userRepo.findOne({
     where: { id: ctx.state.user.id },
-    relations: ["role"],
+    relations: ["role", "profile"],
   });
+
+
 
   if (!user) {
     ctx.status = 404;
@@ -46,6 +50,8 @@ router.get("/profile", authMiddleware, async (ctx) => {
     name: user.name,
     email: user.email,
     role: user.role.name,
+    profile: user.profile || null,
+
   };
 });
 
